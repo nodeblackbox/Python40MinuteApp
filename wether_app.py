@@ -3,22 +3,17 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-
-
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QStackedWidget, QHBoxLayout, QScrollArea
-from PyQt5.QtCore import QTimer, QTime, QDate, Qt
-from pyqtgraph import PlotWidget, plot
-import pyqtgraph as pg
 import numpy as np
-
-
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, 
+                             QStackedWidget, QScrollArea, QHBoxLayout)
+from PyQt5.QtCore import QTimer, QTime, QDate, Qt, QUrl
+from PyQt5.QtGui import QDesktopServices
+import pyqtgraph as pg
 
 
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
-
-
 
 contextual_web_api_key = os.getenv("CONTEXTUAL_WEB_API_KEY")
 open_weather_map_api_key = os.getenv("OPEN_WEATHER_MAP_API_KEY")
@@ -36,7 +31,7 @@ def get_news(api_key: str, query: str):
         'toPublishedDate': 'null'
     }
     headers = {
-        'X-RapidAPI-Key': contextual_web_api_key,
+        'X-RapidAPI-Key': api_key,
         'X-RapidAPI-Host': 'contextualwebsearch-websearch-v1.p.rapidapi.com'
     }
     response = requests.get(base_url, params=params, headers=headers)
@@ -45,18 +40,34 @@ def get_news(api_key: str, query: str):
         return data['value']
     else:
         return []
-
+    
+def get_weather(city: str, api_key: str):
+    base_url = "http://api.openweathermap.org/data/2.5/weather"
+    params = {
+        'q': city,
+        'appid': api_key,
+        'units': 'metric'
+    }
+    response = requests.get(base_url, params=params)
+    data = response.json()
+    if 'weather' in data and 'main' in data:
+        return data
+    else:
+        return None
+    
+def get_crypto_price(crypto):
+    # Here you can replace it with actual API call
+    # For the purpose of this example, I'm using a mock price
+    return 10000.0 if crypto == 'bitcoin' else 2000.0
 
 class NewsCard(QWidget):
     def __init__(self, article):
         super().__init__()
-
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         self.title = QLabel(article['title'])
         self.title.setObjectName("news_title")
-
         self.title.setWordWrap(True)
         layout.addWidget(self.title)
 
@@ -65,6 +76,7 @@ class NewsCard(QWidget):
         layout.addWidget(self.description)
 
         self.link_button = QPushButton("Read More")
+        self.link_button.setObjectName("read_more_button")
         self.link_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(article['url'])))
         layout.addWidget(self.link_button)
 
@@ -72,7 +84,6 @@ class NewsCard(QWidget):
 class NewsView(QWidget):
     def __init__(self):
         super().__init__()
-
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.scroll_area = QScrollArea()
@@ -96,19 +107,7 @@ class NewsView(QWidget):
                 self.scroll_layout.addWidget(card)
 
 
-def get_weather(city: str, api_key: str):
-    base_url = "http://api.openweathermap.org/data/2.5/weather"
-    params = {
-        'q': city,
-        'appid': open_weather_map_api_key,
-        'units': 'metric'
-    }
-    response = requests.get(base_url, params=params)
-    data = response.json()
-    if 'weather' in data and 'main' in data:
-        return data
-    else:
-        return None
+
 
 
 class WeatherApp(QWidget):
@@ -162,15 +161,13 @@ class WeatherApp(QWidget):
         self.date_label.setText(current_date.toString('dd.MM.yyyy'))
 
 
-def get_crypto_price(crypto):
-    # Here you can replace it with actual API call
-    # For the purpose of this example, I'm using a mock price
-    return 10000.0 if crypto == 'bitcoin' else 2000.0
+
 
 
 class View1(QWidget):
     def __init__(self):
         super().__init__()
+
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.title = QLabel("View 1")
@@ -181,6 +178,7 @@ class View1(QWidget):
 class View2(QWidget):
     def __init__(self):
         super().__init__()
+
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.title = QLabel("View 2")
@@ -188,44 +186,7 @@ class View2(QWidget):
         layout.addWidget(self.title)
 
 
-class App(QWidget):
-    def __init__(self):
-        super().__init__()
 
-        self.setWindowTitle("App")
-        self.setGeometry(100, 100, 300, 200)
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        # Set up stacked widget and views
-        self.stacked_widget = QStackedWidget()
-        self.newsView = NewsView()  # Initialize NewsView
-        self.cryptoView = CryptoView()
-        self.weatherApp = WeatherApp()
-
-        self.stacked_widget.addWidget(self.newsView)  # Add NewsView to the stacked_widget
-        self.stacked_widget.addWidget(self.cryptoView)
-        self.stacked_widget.addWidget(self.weatherApp)
-
-        layout.addWidget(self.stacked_widget)
-
-        # Set up buttons
-        button_layout = QHBoxLayout()
-
-        self.newsButton = QPushButton("News")  # Button for the NewsView
-        self.newsButton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.newsView))
-        button_layout.addWidget(self.newsButton)
-
-        self.cryptoButton = QPushButton("Crypto View")  # Button for the CryptoView
-        self.cryptoButton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.cryptoView))
-        button_layout.addWidget(self.cryptoButton)
-
-        self.weatherButton = QPushButton("Weather")
-        self.weatherButton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.weatherApp))
-        button_layout.addWidget(self.weatherButton)
-
-        layout.addLayout(button_layout)
 
 
 class CryptoView(QWidget):
@@ -235,47 +196,114 @@ class CryptoView(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Set up buttons
         button_layout = QHBoxLayout()
 
         self.button1 = QPushButton("Bitcoin Price")
+        self.button1.setObjectName("crypto_button")
         self.button1.clicked.connect(lambda: self.update_graph('bitcoin'))
         button_layout.addWidget(self.button1)
 
         self.button2 = QPushButton("Ethereum Price")
+        self.button2.setObjectName("crypto_button")
         self.button2.clicked.connect(lambda: self.update_graph('ethereum'))
         button_layout.addWidget(self.button2)
 
         self.button3 = QPushButton("Random Crypto Price")
+        self.button3.setObjectName("crypto_button")
         self.button3.clicked.connect(lambda: self.update_graph('randomcrypto'))
         button_layout.addWidget(self.button3)
 
         layout.addLayout(button_layout)
 
-        # Set up plot
         self.plot_widget = pg.PlotWidget()
         layout.addWidget(self.plot_widget)
 
     def update_graph(self, crypto):
-        # Clear the previous plot
         self.plot_widget.clear()
-
-        # Get the price and generate some random data for the plot
         price = get_crypto_price(crypto)
         data = np.random.normal(size=100) * price
         self.plot_widget.plot(data)
 
+class App(QWidget):    
+    def __init__(self):
+        super().__init__()
+
+        self.stack = QStackedWidget(self)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Create instances of our page views
+        self.view1 = View1()
+        self.view2 = View2()
+        self.weather_view = WeatherApp()
+        self.news_view = NewsView()
+        self.crypto_view = CryptoView()
+
+        # Add to stack
+        self.stack.addWidget(self.view1)
+        self.stack.addWidget(self.view2)
+        self.stack.addWidget(self.weather_view)
+        self.stack.addWidget(self.news_view)
+        self.stack.addWidget(self.crypto_view)
+
+        # Create the navigation buttons
+        button_layout = QHBoxLayout()
+
+        self.button1 = QPushButton("View 1")
+        self.button1.clicked.connect(lambda: self.stack.setCurrentIndex(0))
+        button_layout.addWidget(self.button1)
+
+        self.button2 = QPushButton("View 2")
+        self.button2.clicked.connect(lambda: self.stack.setCurrentIndex(1))
+        button_layout.addWidget(self.button2)
+
+        self.weather_button = QPushButton("Weather")
+        self.weather_button.clicked.connect(lambda: self.stack.setCurrentIndex(2))
+        button_layout.addWidget(self.weather_button)
+
+        self.news_button = QPushButton("News")
+        self.news_button.clicked.connect(lambda: self.stack.setCurrentIndex(3))
+        button_layout.addWidget(self.news_button)
+
+        self.crypto_button = QPushButton("Crypto")
+        self.crypto_button.clicked.connect(lambda: self.stack.setCurrentIndex(4))
+        button_layout.addWidget(self.crypto_button)
+
+        layout.addLayout(button_layout)
+
+        card_widget = QWidget()
+        card_layout = QVBoxLayout(card_widget)
+        card_layout.addWidget(self.stack)
+        card_layout.setContentsMargins(10, 10, 10, 10)
+        card_widget.setStyleSheet('''
+            QWidget {
+                background: #fff;
+                border-radius: 10px;
+                border: 1px solid #ddd;
+            }
+        ''')
+        layout.addWidget(card_widget)
+
+        self.stack.setCurrentWidget(self.news_view) # Add this line to make News page default
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+    ex.show()
+    sys.exit(app.exec_())
+
+
 
 app = QApplication(sys.argv)
 
-# Apply custom styling
 app.setStyleSheet('''
     * {
         font-family: Arial, sans-serif;
     }
     
     QWidget {
-        background-color: #fff;
+        background-color: #f2f2f2;
         border-radius: 20px;
         padding: 20px;
     }
@@ -287,7 +315,7 @@ app.setStyleSheet('''
     }
     
     QPushButton {
-        background-color: #000;
+        background-color: #4d4d4d;
         color: #fff;
         border-radius: 5px;
         padding: 8px 16px;
@@ -330,6 +358,31 @@ app.setStyleSheet('''
     
     QPushButton#newsButton:pressed, QPushButton#cryptoButton:pressed, QPushButton#weatherButton:pressed {
         background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    QScrollArea {
+        border: none;
+    }
+
+    QScrollBar:vertical {
+        border: none;
+        background: #f2f2f2;
+        width: 15px;
+        margin: 22px 0 22px 0;
+    }
+
+    QScrollBar::handle:vertical {
+        background: #ccc;
+        min-height: 20px;
+    }
+
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+        border: none;
+        background: none;
+    }
+    
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+        background: none;
     }
 ''')
 
