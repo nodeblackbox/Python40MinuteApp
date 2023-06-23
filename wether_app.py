@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import sys
-import numpy as np
+import numpy
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, 
                              QStackedWidget, QScrollArea, QHBoxLayout)
 from PyQt5.QtCore import QTimer, QTime, QDate, Qt, QUrl
-from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtGui import QDesktopServices, QColor
 import pyqtgraph as pg
 
 
@@ -210,19 +210,30 @@ class CryptoView(QWidget):
 
         self.button3 = QPushButton("Random Crypto Price")
         self.button3.setObjectName("crypto_button")
-        self.button3.clicked.connect(lambda: self.update_graph('randomcrypto'))
+        self.button3.clicked.connect(lambda: self.update_graph('random'))
         button_layout.addWidget(self.button3)
 
         layout.addLayout(button_layout)
 
-        self.plot_widget = pg.PlotWidget()
-        layout.addWidget(self.plot_widget)
+        self.graphWidget = pg.PlotWidget()
+        layout.addWidget(self.graphWidget)
 
-    def update_graph(self, crypto):
-        self.plot_widget.clear()
-        price = get_crypto_price(crypto)
-        data = np.random.normal(size=100) * price
-        self.plot_widget.plot(data)
+        self.x = list(range(100))  # 100 time points
+        self.y = [numpy.sin(x/10) for x in self.x]  # initial values for y (price)
+
+        self.graphWidget.setBackground('w')
+        self.graphWidget.setLabel('left', 'Price', color='black', size=30)
+        self.graphWidget.setLabel('bottom', 'Time', color='black', size=30)
+        self.graphWidget.addLegend(size=(50,30))
+
+        self.pen = pg.mkPen(color=(255, 0, 0))
+        self.data_line =  self.graphWidget.plot(self.x, self.y, pen=self.pen, name="Price Data")
+
+    def update_graph(self, crypto_name):
+        # here we would typically fetch new crypto price data
+        # but for this example, we'll just generate new random data
+        self.y = [numpy.sin(x/10 + numpy.random.rand()/2) for x in self.x]
+        self.data_line.setData(self.x, self.y)
 
 class App(QWidget):    
     def __init__(self):
@@ -251,22 +262,27 @@ class App(QWidget):
         button_layout = QHBoxLayout()
 
         self.button1 = QPushButton("View 1")
+        self.button1.setObjectName("navigation_button")
         self.button1.clicked.connect(lambda: self.stack.setCurrentIndex(0))
         button_layout.addWidget(self.button1)
 
         self.button2 = QPushButton("View 2")
+        self.button2.setObjectName("navigation_button")
         self.button2.clicked.connect(lambda: self.stack.setCurrentIndex(1))
         button_layout.addWidget(self.button2)
 
         self.weather_button = QPushButton("Weather")
+        self.weather_button.setObjectName("navigation_button")
         self.weather_button.clicked.connect(lambda: self.stack.setCurrentIndex(2))
         button_layout.addWidget(self.weather_button)
 
         self.news_button = QPushButton("News")
+        self.news_button.setObjectName("navigation_button")
         self.news_button.clicked.connect(lambda: self.stack.setCurrentIndex(3))
         button_layout.addWidget(self.news_button)
 
         self.crypto_button = QPushButton("Crypto")
+        self.crypto_button.setObjectName("navigation_button")
         self.crypto_button.clicked.connect(lambda: self.stack.setCurrentIndex(4))
         button_layout.addWidget(self.crypto_button)
 
@@ -278,9 +294,8 @@ class App(QWidget):
         card_layout.setContentsMargins(10, 10, 10, 10)
         card_widget.setStyleSheet('''
             QWidget {
-                background: #fff;
                 border-radius: 10px;
-                border: 1px solid #ddd;
+                border: 1px solid #2c2f33;
             }
         ''')
         layout.addWidget(card_widget)
@@ -297,14 +312,15 @@ if __name__ == '__main__':
 
 app = QApplication(sys.argv)
 
+# Modify the app.setStyleSheet section
 app.setStyleSheet('''
     * {
         font-family: Arial, sans-serif;
     }
     
     QWidget {
-        background-color: #f2f2f2;
-        border-radius: 20px;
+        background-color: #36393f;
+        border-radius: 10px;
         padding: 20px;
     }
     
@@ -312,10 +328,11 @@ app.setStyleSheet('''
         font-size: 20px;
         font-weight: bold;
         margin-bottom: 10px;
+        color: #fff;
     }
     
     QPushButton {
-        background-color: #4d4d4d;
+        background-color: #7289da;
         color: #fff;
         border-radius: 5px;
         padding: 8px 16px;
@@ -323,11 +340,11 @@ app.setStyleSheet('''
     }
     
     QPushButton:hover {
-        background-color: #333;
+        background-color: #677bc4;
     }
     
     QPushButton:pressed {
-        background-color: #666;
+        background-color: #5767a8;
     }
     
     QPushButton:focus {
@@ -338,9 +355,9 @@ app.setStyleSheet('''
         border: none;
     }
     
-    QPushButton#newsButton, QPushButton#cryptoButton, QPushButton#weatherButton {
-        background-color: transparent;
-        color: #000;
+    QPushButton#navigation_button {
+        background-color: #2c2f33;
+        color: #fff;
         border: none;
         font-size: 16px;
         font-weight: bold;
@@ -348,31 +365,35 @@ app.setStyleSheet('''
         margin-right: 10px;
     }
     
-    QPushButton#newsButton:hover, QPushButton#cryptoButton:hover, QPushButton#weatherButton:hover {
-        text-decoration: underline;
+    QPushButton#navigation_button:hover {
+        background-color: #23272a;
     }
     
-    QPushButton#newsButton:focus, QPushButton#cryptoButton:focus, QPushButton#weatherButton:focus {
+    QPushButton#navigation_button:focus {
         outline: none;
     }
     
-    QPushButton#newsButton:pressed, QPushButton#cryptoButton:pressed, QPushButton#weatherButton:pressed {
-        background-color: rgba(0, 0, 0, 0.1);
+    QPushButton#navigation_button:pressed {
+        background-color: #23272a;
     }
-
+    
+    QPushButton#navigation_button:checked {
+        background-color: #7289da;
+    }
+    
     QScrollArea {
         border: none;
     }
 
     QScrollBar:vertical {
         border: none;
-        background: #f2f2f2;
+        background: #36393f;
         width: 15px;
         margin: 22px 0 22px 0;
     }
 
     QScrollBar::handle:vertical {
-        background: #ccc;
+        background: #7289da;
         min-height: 20px;
     }
 
