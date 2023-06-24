@@ -7,6 +7,28 @@ This project is a Python application that serves as a multi-purpose dashboard bu
 - **News View:** Fetches news from various sources using the ContextualWeb API.
 - **Weather View:** Fetches real-time weather data of a particular city using the OpenWeatherMap API.
 - **Crypto View:** Displays a mock of real-time price data of a chosen cryptocurrency.
+## 💡 APIs Used 
+
+The project uses the following APIs: 
+
+1. [ContextualWeb API](https://rapidapi.com/contextualwebsearch/api/newsapi-org/): Fetches latest news.
+2. [OpenWeatherMap API](https://openweathermap.org/api): Fetches real-time weather data.
+
+### How to Sign Up for the APIs
+
+#### ContextualWeb API
+
+1. Go to [RapidAPI](https://rapidapi.com/contextualwebsearch/api/newsapi-org/)
+2. Click on "Pricing".
+3. Choose the plan that suits your needs and follow the steps to sign up.
+4. After successful registration, you will be redirected to the API page where you can find your API key.
+
+#### OpenWeatherMap API
+
+1. Go to [OpenWeatherMap](https://home.openweathermap.org/users/sign_up)
+2. Click on "Create an Account".
+3. Fill in your details and create your account.
+4. After successful registration, you will be redirected to the API keys tab where you can find your API key.
 
 ## 🚀 Getting Started
 
